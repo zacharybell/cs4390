@@ -1,6 +1,7 @@
 import fnmatch
 import numpy as np
 import pandas as pd
+import pickle
 import os
 import scipy as sci
 
@@ -11,7 +12,8 @@ from nltk.tokenize import TweetTokenizer
 CORNELL_DATA = 'assignment-d/data/cornell'
 IMDB_DATASET = 'imdb.npz'
 RATERS       = ['Dennis+Schwartz', 'James+Berardinelli', 'Scott+Renshaw', 'Steve+Rhodes']
-PANDAS       = 'assignment-d/data/pandas.pkl'
+PANDAS       = 'assignment-d/data/processed.h5'
+PICKLE       = 'assignment-d/data/processed.pkl'
 
 
 def tokenize(text: np.ndarray):
@@ -88,14 +90,14 @@ def embed_transform(data, min_count=1, size=100):
         A matrix with all of the words represented with word embeddings.
     """
 
-    w2v = Word2Vec(sentences=data, min_count=min_count, size=size)
-    embed_data = np.array([])
+    w2v = Word2Vec(sentences=data.tolist(), min_count=min_count, size=size)
+    embed_data = np.zeros(data.shape+(size,))
 
     def sent_to_vec(model, sentence):
         return np.array([model.wv[w] for w in sentence])
 
-    for sentence in data:
-        embed_data = np.append(embed_data, sent_to_vec(w2v, sentence), axis=0)
+    for i, sentence in enumerate(data):
+        embed_data[i,:] = sent_to_vec(w2v, sentence)
 
     return embed_data
 
@@ -115,19 +117,20 @@ for r in RATERS:
 ## Numerical labels for raters (e.g. Dennis -> 0, James -> 1, ect.)
 _, cornell_df['rater_id'] = np.unique(cornell_df['rater'], return_inverse=True)
 
+cornell_dict = {}
+
 ## Tokenize
-cornell_df['x_tok']       = tokenize(cornell_df['x'])
+cornell_dict['x_tok']    = tokenize(cornell_df['x'])
 
 ## Padding
-x_padded = add_padding(cornell_df['x_tok'], dtype=np.dtype('<U30'))
+cornell_dict['x_padded'] = add_padding(cornell_dict['x_tok'], dtype=np.dtype('<U32'))
 
 ## Embedding
-print(x_padded.shape)
-print(x_padded.dtype)
+cornell_dict['x_embed']  = embed_transform(cornell_dict['x_padded'], size=20)
 
-x_embed  = embed_transform(x_padded, size=20)
+## Save data
+with pd.HDFStore(PANDAS) as store:
+    store.append('cornell_df', cornell_df)
 
-
-# ## Save the dataframe
-# cornell_df.to_pickle(PANDAS)
-
+with open(PICKLE, 'wb') as f:
+    pickle.dump(cornell_dict, f)

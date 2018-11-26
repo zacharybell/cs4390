@@ -11,6 +11,7 @@ numpy = "*"
 pandas = "*"
 nltk = "*"
 gensim = "*"
+tables = "*"
 
 [requires]
 python_version = "3.6"
