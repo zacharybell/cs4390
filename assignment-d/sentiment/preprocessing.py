@@ -128,9 +128,11 @@ cornell_dict['x_padded'] = add_padding(cornell_dict['x_tok'], dtype=np.dtype('<U
 ## Embedding
 cornell_dict['x_embed']  = embed_transform(cornell_dict['x_padded'], size=20)
 
+print('shape', cornell_df.shape)
+
 ## Save data
 with pd.HDFStore(PANDAS) as store:
-    store.append('cornell_df', cornell_df)
+    store['cornell_df'] = cornell_df
 
 with open(PICKLE, 'wb') as f:
     pickle.dump(cornell_dict, f)

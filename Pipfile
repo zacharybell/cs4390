@@ -12,6 +12,8 @@ pandas = "*"
 nltk = "*"
 gensim = "*"
 tables = "*"
+tensorflow-gpu = "*"
+keras = "*"
 
 [requires]
 python_version = "3.6"
